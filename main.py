@@ -18,10 +18,11 @@ def catcher(func):
 
 @catcher
 def decode_gprmc(line):
-    hours = line[7:9]
-    minutes = line[9:11]
-    seconds = line[11:13]
-    milliseconds = line[14 : 14 + 2]
+    print("GPRMC", end=" ")
+    hours = int(line[7:9])
+    minutes = int(line[9:11])
+    seconds = int(line[11:13])
+    milliseconds = int(line[14 : 14 + 2])
     print(f"{hours}:{minutes}:{seconds}.{milliseconds}", end=" ")
     state = line[17]
     if state == "V":
@@ -61,10 +62,11 @@ def decode_gprmc(line):
 
 
 def decode_gpgga(line):
-    hours = line[7:9]
-    minutes = line[9:11]
-    seconds = line[11:13]
-    milliseconds = line[13 : 13 + 3]
+    print("GPGGA", end=" ")
+    hours = int(line[7:9])
+    minutes = int(line[9:11])
+    seconds = int(line[11:13])
+    milliseconds = int(line[14:16])
     latitude = line[17 : 17 + 11]
     lat = int(latitude[0:2])
     lat_min = float(latitude[2:-2])
@@ -76,25 +78,33 @@ def decode_gpgga(line):
     position = line[42]
     satellites = line[44 : 44 + 2]
     hdop = line[47:50]
-    altitude = line[53:59]
-    altitude_units = line[59:1]
     star = line[58]
     crc = line[59:61]
     print(
         {
-            "hours": hours,
-            "minutes": minutes,
-            "seconds": seconds,
-            "milliseconds": milliseconds,
+            "time": f"{hours}:{minutes}:{seconds}.{milliseconds}",
             "latitude": latitude,
             "longitude": longitude,
             "position": position,
             "satellites": satellites,
             "hdop": hdop,
-            "altitude": altitude,
-            "altitude_units": altitude_units,
             "star": star,
             "crc": crc,
+        }
+    )
+
+
+@catcher
+def decode_gpgsv(line):
+    print("GPGSV", end=" ")
+    nb = int(line[7])
+    current = int(line[9])
+    total = int(line[11:12])
+    print(
+        {
+            "nb": nb,
+            "current": current,
+            "total": total,
         }
     )
 
@@ -106,8 +116,10 @@ def decode_line(line):
             decode_gpgga(line)
         elif line.startswith("$GPRMC"):
             decode_gprmc(line)
+        elif line.startswith("$GPGSV"):
+            decode_gpgsv(line)
         else:
-            print(line)
+            print(line[0:6])
     except UnicodeDecodeError:
         print("Error decoding line")
 
